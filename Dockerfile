@@ -2,7 +2,7 @@ FROM registry.cn-hangzhou.aliyuncs.com/zbsg/node-alpine:6.10.0
 
 RUN npm install unirest -g
 
-mkdir /opt/rancher-deploy
+RUN mkdir /opt/rancher-deploy
 
 ENV PATH=/opt/rancher-deploy:$PATH
 COPY / /opt/rancher-deploy/
