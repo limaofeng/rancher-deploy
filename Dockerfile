@@ -11,7 +11,3 @@ RUN ln -s /opt/rancher-deploy/run /usr/bin/deploy && \
 
 ENTRYPOINT []
 CMD []
-
-
-ENTRYPOINT []
-CMD []
