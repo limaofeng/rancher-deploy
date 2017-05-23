@@ -13,4 +13,4 @@ export CI_REGISTRY_IMAGE=registry-internal.cn-hangzhou.aliyuncs.com/zbsg/api-gat
 #echo "        RANCHER_SECRETKEY=$RANCHER_SECRETKEY"
 #echo "        RANCHER_SECRETKEY=$RANCHER_SERVICE"
 
-node /opt/rancher-deploy/rancher.js upgrade
+node rancher.js upgrade
