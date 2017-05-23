@@ -6,7 +6,7 @@ RUN npm install unirest -g
 
 ENV PATH=/opt/rancher-deploy:$PATH
 
-RUN ln -s /opt/rancher-deploy/run /usr/bin/deploy && \
+RUN ln -s /opt/rancher-deploy /usr/bin/deploy && \
   which deploy && \
   which build && \
   which destroy
