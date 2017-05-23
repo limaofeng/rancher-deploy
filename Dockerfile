@@ -8,7 +8,8 @@ ENV PATH=/opt/rancher-deploy:$PATH
 
 RUN cd /opt/rancher-deploy && ls
 
-RUN ln -s /opt/rancher-deploy/deploy /usr/bin/deploy
+RUN ln -s /opt/rancher-deploy/deploy /usr/bin/deploy && \
+  which deploy
 
 ENTRYPOINT []
 CMD []
