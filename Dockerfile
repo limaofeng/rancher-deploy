@@ -1,4 +1,4 @@
-FROM node:6.9-alpine
+FROM registry.cn-hangzhou.aliyuncs.com/zbsg/node-alpine:6.10.0
 
 COPY . /app
 
