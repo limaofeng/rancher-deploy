@@ -3,11 +3,11 @@ var unirest = require("unirest");
 var rancherServerUrl = process.env.RANCHER_URL
 var username = process.env.RANCHER_ACCESSKEY
 var password = process.env.RANCHER_SECRETKEY
-var environment = process.env.CI_ENVIRONMENT_NAME
+var environment = process.env.RANCHER_ENVIRONMENT
 var authorization = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
 var service = process.env.RANCHER_SERVICE.split('/')[1];
 var stack = process.env.RANCHER_SERVICE.split('/')[0];
-var newDockerImage = process.env.CI_REGISTRY_IMAGE
+var newDockerImage = process.env.CI_REGISTRY_IMAGE;
 
 var arguments = process.argv.splice(2);
 
