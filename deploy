@@ -1,16 +1,23 @@
 #!/bin/bash
 
-export RANCHER_URL=https://console.zbsg.com.cn
-export RANCHER_ACCESSKEY=BA5F080689B5A08AF1E4
-export RANCHER_SECRETKEY=evbX5LfdFgu5Nbj14g5ga17Dfud5StYAx31nwYue
-export RANCHER_SERVICE=api-dev/gateway
-export CI_ENVIRONMENT_NAME=test
+# https://console.zbsg.com.cn
+export RANCHER_URL=$RANCHER_URL
+# BA5F080689B5A08AF1E4
+export RANCHER_ACCESSKEY=$RANCHER_ACCESSKEY
+# evbX5LfdFgu5Nbj14g5ga17Dfud5StYAx31nwYue
+export RANCHER_SECRETKEY=$RANCHER_SECRETKEY
+# evbX5LfdFgu5Nbj14g5ga17Dfud5StYAx31nwYue
+# api-dev/gateway
+export RANCHER_SERVICE=$RANCHER_SECRETKEY
+# test
+export RANCHER_ENVIRONMENT=$RANCHER_ENVIRONMENT
 export CI_REGISTRY_IMAGE=registry-internal.cn-hangzhou.aliyuncs.com/zbsg/api-gateway:2.2.46
 
-#echo " 检视相关参数 :"
-#echo "        RANCHER_URL=$RANCHER_URL"
-#echo "        RANCHER_ACCESSKEY=$RANCHER_ACCESSKEY"
-#echo "        RANCHER_SECRETKEY=$RANCHER_SECRETKEY"
-#echo "        RANCHER_SECRETKEY=$RANCHER_SERVICE"
+echo " 检视相关参数 :"
+echo "        RANCHER_URL=$RANCHER_URL"
+echo "        RANCHER_ACCESSKEY=$RANCHER_ACCESSKEY"
+echo "        RANCHER_SECRETKEY=$RANCHER_SECRETKEY"
+echo "        RANCHER_SECRETKEY=$RANCHER_SERVICE"
+echo "        RANCHER_ENVIRONMENT=$RANCHER_ENVIRONMENT"
 
 node /opt/rancher-deploy/rancher.js upgrade
