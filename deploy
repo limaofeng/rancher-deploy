@@ -9,7 +9,8 @@ var password = process.env.RANCHER_SECRETKEY
 var authorization = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
 var stack = process.env.RANCHER_NAMESPACE || process.env.CI_PROJECT_NAMESPACE;
 var service = process.env.RANCHER_SERVICE || process.env.CI_PROJECT_NAME;
-var newDockerImage = process.env.CI_REGISTRY_IMAGE;
+var registryImage = process.env.CI_REGISTRY_IMAGE;
+var registryTag = process.env.CI_REGISTRY_TAG;
 
 console.log(`
 检视相关参数 :
@@ -19,7 +20,7 @@ console.log(`
         SERVICE=${service}
         ACCESSKEY=${username}
         SECRETKEY=${password}
-        IMAGE=${newDockerImage}
+        IMAGE=${registryImage}:${registryTag}
 `)
 
 function load(url, rootKey) {
@@ -57,7 +58,7 @@ load(`${serverUrl}/v2-beta/projects`, 'data').then(items => {
 }).then(items => {
     data = items.find((item) => item.name.toLowerCase() == service.toLowerCase());
     console.log(`         Service id=${data.id} name=${data.name} state=${data.state} image=${data.launchConfig.imageUuid}`);
-    return upgrade(data, newDockerImage);
+    return upgrade(data, `${registryImage}:${registryTag}`);
 }).then(data=>{
     console.log('Upgrade Success !');
 });
