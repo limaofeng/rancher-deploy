@@ -1,24 +1,139 @@
-#!/bin/bash
+#!/bin/node
 
-# https://console.zbsg.com.cn
-export RANCHER_URL=$RANCHER_URL
-# BA5F080689B5A08AF1E4
-export RANCHER_ACCESSKEY=$RANCHER_ACCESSKEY
-# evbX5LfdFgu5Nbj14g5ga17Dfud5StYAx31nwYue
-export RANCHER_SECRETKEY=$RANCHER_SECRETKEY
-# evbX5LfdFgu5Nbj14g5ga17Dfud5StYAx31nwYue
-# api-dev/gateway
-export RANCHER_SERVICE=$RANCHER_SERVICE
-# test
-export RANCHER_ENVIRONMENT=$RANCHER_ENVIRONMENT
-export CI_REGISTRY_IMAGE=$DOCKER_IMAGE
+var unirest = require("unirest");
 
-echo " 检视相关参数 :"
-echo "        RANCHER_URL=$RANCHER_URL"
-echo "        RANCHER_ACCESSKEY=$RANCHER_ACCESSKEY"
-echo "        RANCHER_SECRETKEY=$RANCHER_SECRETKEY"
-echo "        RANCHER_SERVICE=$RANCHER_SERVICE"
-echo "        RANCHER_ENVIRONMENT=$RANCHER_ENVIRONMENT"
-echo "        REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
+var serverUrl = process.env.RANCHER_URL
+var environment = process.env.RANCHER_ENVIRONMENT
+var username = process.env.RANCHER_ACCESSKEY
+var password = process.env.RANCHER_SECRETKEY
+var authorization = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
+var stack = process.env.RANCHER_NAMESPACE || process.env.CI_PROJECT_NAMESPACE;
+var service = process.env.RANCHER_SERVICE || process.env.CI_PROJECT_NAME;
+var newDockerImage = process.env.CI_REGISTRY_IMAGE;
 
-node /opt/rancher-deploy/rancher.js upgrade
+console.log(`
+检视相关参数 :
+        SERVER_URL=${serverUrl}
+        ENVIRONMENT=${environment}
+        STACK=${stack}
+        SERVICE=${service}
+        ACCESSKEY=${username}
+        SECRETKEY=${password}
+        IMAGE=${newDockerImage}
+`)
+
+function load(url, rootKey) {
+    var req = unirest("GET", url);
+
+    req.headers({
+        "cache-control": "no-cache",
+        "authorization": authorization
+    });
+
+    return new Promise((resolve, reject) => {
+        req.end(function (res) {
+            if (res.error) {
+                reject(new Error(res.error));
+            } else {
+                resolve(rootKey ? res.body[rootKey] : res.body);
+            }
+        })
+    });
+}
+
+console.log(`Checking Environment ${environment}`);
+load(`${serverUrl}/v2-beta/projects`, 'data').then(items => {
+    data = items.find((item) => item.name.toLowerCase() == environment.toLowerCase());
+    console.log(`         Environment id=${data.id} name=${data.name} state=${data.state}`);
+
+    console.log(`Checking Stack ${stack}`);
+    return load(data.links.stacks, 'data');
+}).then(items => {
+    data = items.find((item) => item.name.toLowerCase() == stack.toLowerCase());
+    console.log(`         Stack id=${data.id} name=${data.name} state=${data.state}`);
+
+    console.log(`Checking Service ${service}`);
+    return load(data.links.services, 'data');
+}).then(items => {
+    data = items.find((item) => item.name.toLowerCase() == service.toLowerCase());
+    console.log(`         Service id=${data.id} name=${data.name} state=${data.state} image=${data.launchConfig.imageUuid}`);
+    return upgrade(data, newDockerImage);
+}).then(data=>{
+    console.log('Upgrade Success !');
+});
+
+function upgrade(data, image) {
+    // 检查服务状态
+    if (data.state == 'active') {
+        data.launchConfig.imageUuid = 'docker:' + image;
+    } else if (data.state == 'upgraded') { //如果上一个状态未结束，直接结束。然后发布
+        return finishupgrade(data).then(data => upgrade(data, image));
+    }
+    // 升级服务
+    var req = unirest("POST", data.actions.upgrade);
+    req.headers({
+        "cache-control": "no-cache",
+        "authorization": authorization,
+        "content-type": "application/json"
+    });
+    req.type("json");
+    req.send({
+        "inServiceStrategy": data,
+        "toServiceStrategy": null
+    });
+    return new Promise((resolve, reject) => {
+        req.end(function (res) {
+            if (res.error) {
+                reject(new Error(res.error));
+            } else {
+                console.log(` Upgrading Service Image => ${image}`);
+                finishupgrade(data).then(data => resolve(data));
+            }
+        })
+    });
+    // 升级完成
+}
+
+function finishupgrade(data) {
+
+    // 循环加载服务，直到到达期望的条件
+    const _loadservice = function (data, has, text) {
+        return new Promise((resolve, reject) => {
+            var _rebirth = function (data) {
+                if (has(data)) {
+                    resolve(data);
+                    return;
+                }
+                setTimeout(() => {
+                    load(data.links.self).then(data => {
+                        console.log(`${text}      state=${data.state}`);
+                        _rebirth(data);
+                    });
+                }, 5000);
+            }
+            _rebirth(data);
+        });
+    }
+
+    // 完成升级
+    const _finish = function (data) {
+        var req = unirest("POST", data.actions.finishupgrade);
+        req.headers({
+            "cache-control": "no-cache",
+            "authorization": authorization,
+            "content-type": "application/json"
+        });
+        return new Promise((resolve, reject) => {
+            req.end(function (res) {
+                if (res.error) {
+                    reject(new Error(res.error));
+                } else {
+                    _loadservice(data, data => data.state == 'active', 'Waiting Service Active...').then(data => resolve(data));
+                }
+            });
+        });
+    }
+
+    return _loadservice(data, (data) => data.state == 'upgraded', 'Waiting Service Upgraded...').then(data => _finish(data));
+
+}
