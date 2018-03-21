@@ -3,7 +3,7 @@
 var unirest = require("unirest");
 
 var serverUrl = process.env.RANCHER_URL
-var environment = process.env.RANCHER_ENVIRONMENT
+var environment = process.env.RANCHER_ENVIRONMENT || process.env.CI_ENVIRONMENT_SLUG
 var username = process.env.RANCHER_ACCESSKEY
 var password = process.env.RANCHER_SECRETKEY
 var authorization = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
