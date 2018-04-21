@@ -76,8 +76,8 @@ RUN apk add -U openssl curl tar gzip bash ca-certificates && \
 RUN apk add ruby git
 
 ENV PATH=/opt/rancher-deploy:$PATH
-COPY / /opt/rancher-deploy
-RUN ln -s /opt/kubernetes-deploy/run /usr/bin/deploy && \
+COPY . /opt/rancher-deploy
+RUN ln -s /opt/rancher-deploy/run /usr/bin/deploy && \
   which deploy && \
   which build && \
   which destroy
