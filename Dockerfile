@@ -77,8 +77,7 @@ RUN apk add ruby git
 
 ENV PATH=/opt/rancher-deploy:$PATH
 COPY . /opt/rancher-deploy
-RUN ln -s /opt/rancher-deploy/run /usr/bin/deploy && \
-  which deploy && \
+RUN which deploy && \
   which build && \
   which destroy
 
